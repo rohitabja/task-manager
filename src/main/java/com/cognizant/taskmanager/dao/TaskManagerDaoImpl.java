@@ -41,7 +41,7 @@ public class TaskManagerDaoImpl implements TaskManagerDao {
         log.info("Saving new task {}", request);
         jdbcTemplate.update(connection -> {
                     PreparedStatement ps = connection.prepareStatement(
-                            "insert into taskmgr.task (nm_task, id_parent_task, priority, dt_start, dt_end, is_completed, dt_updated) " +
+                            "insert into task (nm_task, id_parent_task, priority, dt_start, dt_end, is_completed, dt_updated) " +
                                     "values (?,?,?,?,?,?,?)", Statement.RETURN_GENERATED_KEYS);
                     ps.setString(1, request.getTaskName().trim());
                     ps.setObject(2, parentTaskId.orElse(null), Types.INTEGER);
@@ -71,8 +71,8 @@ public class TaskManagerDaoImpl implements TaskManagerDao {
 
     @Override
     public Task getTaskById(final Integer taskId) {
-        return jdbcTemplate.queryForObject("select * from taskmgr.task t " +
-                        " left outer join taskmgr.parent_task pt " +
+        return jdbcTemplate.queryForObject("select * from task t " +
+                        " left outer join parent_task pt " +
                         " on pt.id_parent_task = t.id_parent_task " +
                         " where id_task = ?",
                 (resultSet, i) ->
@@ -95,7 +95,7 @@ public class TaskManagerDaoImpl implements TaskManagerDao {
         }
 
         final List<ParentTask> parentTask = jdbcTemplate.query(
-                "select * from taskmgr.parent_task where nm_parent_task = ?"
+                "select * from parent_task where nm_parent_task = ?"
                 , new Object[]{task.getParentTaskName().trim()}
                 , (rs, i) ->
                         ParentTask.builder()
@@ -107,7 +107,7 @@ public class TaskManagerDaoImpl implements TaskManagerDao {
             log.info("Parent task not found in database, creating new parent task {}", task);
             final KeyHolder keyHolder = new GeneratedKeyHolder();
             jdbcTemplate.update(connection -> {
-                PreparedStatement ps = connection.prepareStatement("insert into taskmgr.parent_task (nm_parent_task) values (?)", Statement.RETURN_GENERATED_KEYS);
+                PreparedStatement ps = connection.prepareStatement("insert into parent_task (nm_parent_task) values (?)", Statement.RETURN_GENERATED_KEYS);
                 ps.setString(1, task.getParentTaskName().trim());
                 return ps;
             }, keyHolder);
@@ -126,7 +126,7 @@ public class TaskManagerDaoImpl implements TaskManagerDao {
         final Optional<Integer> parentTaskId = getParentTaskId(request);
         log.info("Updating new task {}", request);
 
-        jdbcTemplate.update("update taskmgr.task set " +
+        jdbcTemplate.update("update task set " +
                         " nm_task=?, id_parent_task=?, priority=?, dt_start=?, dt_end=?, is_completed=?, dt_updated=? " +
                         " where id_task=?",
                 request.getTaskName(), parentTaskId.orElse(null), request.getPriority(),
@@ -139,8 +139,8 @@ public class TaskManagerDaoImpl implements TaskManagerDao {
     @Override
     public List<Task> getTasks() {
         return jdbcTemplate.query(
-                "select id_task, nm_task, pt.nm_parent_task, priority, dt_start, dt_end, is_completed from taskmgr.task t" +
-                        " left join taskmgr.parent_task pt " +
+                "select id_task, nm_task, pt.nm_parent_task, priority, dt_start, dt_end, is_completed from task t" +
+                        " left join parent_task pt " +
                         " on pt.id_parent_task = t.id_parent_task " +
                         " order by t.dt_updated desc",
                 (resultSet, i) -> Task.builder()
