@@ -14,12 +14,12 @@ pipeline {
     }
     stage('Docker build') {
        steps {
-         sh 'docker build . -t task-manager:${currentBuild.number}'
+         sh 'docker build . -t task-manager'
        }
     }
     stage('Docker Run') {
        steps {
-          sh 'docker run -p 8081:8081 --name task-manager:${currentBuild.number} --link mysql-taskmanager-v1:mysql -d task-manager:${currentBuild.number}'
+          sh 'docker run -p 8081:8081 --name task-manager --link mysql-taskmanager-v1:mysql -d task-manager'
        }
     }
   }
