@@ -26,7 +26,6 @@ pipeline {
     }
     stage('Docker build') {
        steps {
-         echo "current build number: ${currentBuild.number}"
          sh 'docker build . -t task-manager:${currentBuild.number}'
        }
     }
